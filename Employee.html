@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #34a853;
+            text-align: center;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #34a853;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button.danger {
+            background-color: #ea4335;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .back-btn {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #34a853;
+            text-decoration: none;
+        }
+        #passwordPrompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #passwordPrompt div {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div id="passwordPrompt">
+        <div>
+            <h2>Employee Login</h2>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter employee password">
+            </div>
+            <button onclick="checkPassword()">Login</button>
+            <p id="passwordError" style="color: #ea4335; display: none;">Incorrect password</p>
+        </div>
+    </div>
+
+    <div class="container" id="mainContent" style="display: none;">
+        <a href="index.html" class="back-btn">← Back to Home</a>
+        <h1>Employee Portal</h1>
+        
+        <div class="section">
+            <h2>Customer Search</h2>
+            <div class="form-group">
+                <label for="searchId">Customer ID:</label>
+                <input type="text" id="searchId" placeholder="Enter customer ID">
+            </div>
+            <button onclick="searchCustomer()">Search</button>
+            <div id="searchResult"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Update Points</h2>
+            <div class="form-group">
+                <label for="pointsValue">New Points Value:</label>
+                <input type="number" id="pointsValue" placeholder="Enter new points value">
+            </div>
+            <button onclick="updatePoints()">Update Points</button>
+            <button class="danger" onclick="resetForm()">Reset</button>
+        </div>
+        
+        <div class="section">
+            <h2>Add New Customer</h2>
+            <div class="form-group">
+                <label for="newCustomerId">Customer ID:</label>
+                <input type="text" id="newCustomerId" placeholder="Enter new customer ID">
+            </div>
+            <div class="form-group">
+                <label for="newCustomerName">Name:</label>
+                <input type="text" id="newCustomerName" placeholder="Enter customer name">
+            </div>
+            <div class="form-group">
+                <label for="initialPoints">Initial Points:</label>
+                <input type="number" id="initialPoints" placeholder="Enter initial points" value="0">
+            </div>
+            <button onclick="addCustomer()">Add Customer</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzDJUp9fj8qwg7semihV1cKa3A9iSR1GaOiJiDIFcAQGZyW46lGOlMvdzwin2Tl3muH6A/exec";
+        const PASSWORD = "778475750"; // Change this to your desired password
+        let currentCustomer = null;
+        
+        // Password check
+        function checkPassword() {
+            const enteredPassword = document.getElementById("password").value;
+            if (enteredPassword === PASSWORD) {
+                document.getElementById("passwordPrompt").style.display = "none";
+                document.getElementById("mainContent").style.display = "block";
+            } else {
+                document.getElementById("passwordError").style.display = "block";
+            }
+        }
+        
+        // Customer search
+        function searchCustomer() {
+            const customerId = document.getElementById("searchId").value;
+            if (!customerId) {
+                alert("Please enter a customer ID");
+                return;
+            }
+            
+            fetch(`${API_URL}?action=getCustomer&cardId=${customerId}&password=${PASSWORD}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById("searchResult");
+                    if (data.error) {
+                        resultDiv.innerHTML = `<p style="color: #ea4335;">${data.error}</p>`;
+                        currentCustomer = null;
+                    } else {
+                        currentCustomer = {
+                            cardId: data.cardId,
+                            name: data.name,
+                            points: data.points
+                        };
+                        resultDiv.innerHTML = `
+                            <h3>Customer Found</h3>
+                            <p><strong>ID:</strong> ${data.cardId}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Current Points:</strong> ${data.points}</p>
+                        `;
+                    }
+                });
+        }
+        
+        // Update points
+        function updatePoints() {
+            if (!currentCustomer) {
+                alert("Please search for a customer first");
+                return;
+            }
+            
+            const newPoints = document.getElementById("pointsValue").value;
+            if (!newPoints) {
+                alert("Please enter a points value");
+                return;
+            }
+            
+            fetch(`${API_URL}?action=updatePoints&cardId=${currentCustomer.cardId}&points=${newPoints}&password=${PASSWORD}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Points updated successfully!");
+                        searchCustomer(); // Refresh customer data
+                    } else {
+                        alert("Error updating points");
+                    }
+                });
+        }
+        
+        // Add new customer
+        function addCustomer() {
+            const customerId = document.getElementById("newCustomerId").value;
+            const name = document.getElementById("newCustomerName").value;
+            const points = document.getElementById("initialPoints").value || 0;
+            
+            if (!customerId || !name) {
+                alert("Please enter both customer ID and name");
+                return;
+            }
+            
+            fetch(`${API_URL}?action=addCustomer&cardId=${customerId}&name=${name}&points=${points}&password=${PASSWORD}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Customer added successfully!");
+                        // Clear form
+                        document.getElementById("newCustomerId").value = "";
+                        document.getElementById("newCustomerName").value = "";
+                        document.getElementById("initialPoints").value = "0";
+                    } else {
+                        alert("Error adding customer");
+                    }
+                });
+        }
+        
+        // Reset form
+        function resetForm() {
+            currentCustomer = null;
+            document.getElementById("searchId").value = "";
+            document.getElementById("pointsValue").value = "";
+            document.getElementById("searchResult").innerHTML = "";
+        }
+    </script>
+</body>
+</html>
