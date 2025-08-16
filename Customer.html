@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Points Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #4285f4;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .back-btn {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #4285f4;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← Back to Home</a>
+        <h1>Check Your Points</h1>
+        
+        <div class="form-group">
+            <label for="cardId">Customer ID:</label>
+            <input type="text" id="cardId" placeholder="Enter your customer ID">
+        </div>
+        
+        <button onclick="checkPoints()">Check Points</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzDJUp9fj8qwg7semihV1cKa3A9iSR1GaOiJiDIFcAQGZyW46lGOlMvdzwin2Tl3muH6A/exec";
+        
+        function checkPoints() {
+            const cardId = document.getElementById("cardId").value;
+            if (!cardId) {
+                alert("Please enter your customer ID");
+                return;
+            }
+            
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.display = "none";
+            
+            fetch(`${API_URL}?action=getCustomer&cardId=${cardId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        resultDiv.innerHTML = `<p style="color: #ea4335;">${data.error}</p>`;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <h3>Customer Details</h3>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Points:</strong> ${data.points}</p>
+                            ${data.lastUpdated ? `<p><strong>Last Updated:</strong> ${new Date(data.lastUpdated).toLocaleDateString()}</p>` : ''}
+                        `;
+                    }
+                    resultDiv.style.display = "block";
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<p style="color: #ea4335;">Error: Could not connect to server</p>`;
+                    resultDiv.style.display = "block";
+                });
+        }
+    </script>
+</body>
+</html>
